@@ -29,7 +29,7 @@ const showOnHomePage = (eachRecipe) => {
     eachRecipeDiv.classList.add("each-recipe");
     eachRecipeDiv.insertAdjacentHTML("afterbegin", `
     <h1 class="rp-title">${recipe.title}</h1>
-    <img src=${recipe.images.medium} alt="${recipe.title}">
+    <img src=public${recipe.images.medium} alt="${recipe.title}">
     <p>${recipe.description}</p>
     <a class="read-more" href="#">Let's Cook...</a>`);
 
@@ -51,7 +51,7 @@ const showFullRecipe = (specials) => {
               event.preventDefault();
               if (event.currentTarget.closest("div").querySelector(".rp-title").outerText === recipe.title) {
                 modalInnerDiv.innerHTML = `<h2 class="inner-modal-title">${recipe.title}</h2> <span class="close"> X </span>
-                      <img src=${recipe.images.full} alt="${recipe.title}">
+                      <img src=public${recipe.images.full} alt="${recipe.title}">
                       <p class="inner-description">${recipe.description}</p>
                       <p>Prep Time: ${recipe.prepTime}</p>
                       <p>Cook Time: ${recipe.cookTime}</p>
