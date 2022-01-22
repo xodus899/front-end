@@ -1,101 +1,110 @@
 const modalDiv = document.querySelector(".modal");
-const modalInnerDiv = document.querySelector(".modal-inner");
-const allRecipiesDiv = document.querySelector(".all-recipies");
-const eachRecipieDiv = document.querySelector(".rp-title");
+let allRecipes;
 
+const getResponse = (response) => {
+  if (!response.ok) {
+    throw new Error('Network response was not valid');
+  }
+  return response.json();
+}
 
-const getAllRecipies = () => {
-  let allRecipies;
-  let specials;
-  fetch('http://localhost:3001/recipes')
-      .then((response) => {
-          if (!response.ok) {
-              throw new Error('Network response was not valid');
-          }
-          return response.json();
-      })
-      .then((data) => {
+const getRecipeData = (data) => {
+  allRecipes = data.recipes;
+  showOnHomePage(allRecipes);
+  return fetch('http://localhost:3001/specials');
 
-          // Cache the data to a variable /recipies
-          allrecipies = data;
-          // Make another API call and pass it into the stream
+}
 
-          return fetch('http://localhost:3001/specials');
-      }).then((response) => {
-          if (!response.ok) {
-              throw new Error('Network response was not valid');
-          }
-          return response.json();
-      }).then((data) => {
+const getSpecialsData = (data) => {
+  const specials = data.specials;
+  showFullRecipe(specials);
+};
 
-          // Cache the data to a variable specials call
-          specials = data;
+const showOnHomePage = (eachRecipe) => {
+  const allRecipeDiv = document.querySelector(".all-recipes");
+  const eachRecipeDiv = document.querySelector(".rp-title");
+  eachRecipe.forEach((recipe) => {
 
-          allrecipies.forEach((recipie) => {
+    const eachRecipeDiv = document.createElement("div");
+    eachRecipeDiv.classList.add("each-recipe");
+    eachRecipeDiv.insertAdjacentHTML("afterbegin", `
+    <h1 class="rp-title">${recipe.title}</h1>
+    <img src=${recipe.images.medium} alt="${recipe.title}">
+    <p>${recipe.description}</p>
+    <a class="read-more" href="#">Let's Cook...</a>`);
 
-              const eachRecipieDiv = document.createElement("div");
-              eachRecipieDiv.classList.add("each-recipie");
-              eachRecipieDiv.insertAdjacentHTML("afterbegin", `
-              <h1 class="rp-title">${recipie.title}</h1>
-              <img src=public${recipie.images.medium} alt="${recipie.title}">
-              <p>${recipie.description}</p>
-              <a class="read-more" href="#">Let's Cook...</a>`);
+    allRecipeDiv.append(eachRecipeDiv);
+  });
+}
 
-              allRecipiesDiv.append(eachRecipieDiv);
-              specials.forEach((specialId) => {
-                  recipie.ingredients.forEach((ingredient) => {
-                      if (specialId.ingredientId === ingredient.uuid) {
+const showFullRecipe = (specials) => {
+  const modalInnerDiv = document.querySelector(".modal-inner");
 
-                          const letsCook = document.querySelectorAll("a.read-more");
-                          letsCook.forEach((recipieButton) => {
-                              recipieButton.addEventListener("click", (event) => {
-                                  event.preventDefault();
-                                  if (event.currentTarget.closest("div").querySelector(".rp-title").outerText === recipie.title) {
-                                      modalInnerDiv.innerHTML = `<h2 class="inner-modal-title">${recipie.title}</h2> <span class="close"> X </span>
-                                      <img src=public${recipie.images.full} alt="${recipie.title}">
-                                      <p class="inner-description">${recipie.description}</p>
-                                      <p>Prep Time: ${recipie.prepTime}</p>
-                                      <p>Cook Time: ${recipie.cookTime}</p>
-                                      <p>Servings: ${recipie.servings}</p>
-                                      <ul>${recipie.ingredients.map((eachIngredient) => {return (`<li>${eachIngredient.amount} ${eachIngredient.measurement} ${eachIngredient.name}</li>`)}).join(" ") }</ul>
-                                      <hr>
-                                      <ol>${recipie.directions.map((eachDirection) => {return ( `<li>${eachDirection.instructions}</li>`)}).join("") }</ol>
-                                      <div class="coupon">
-                                        <p>Special ${specialId.type} Deal: ${specialId.title}</p>
-                                        <p>${specialId.text}</p>
-                                      </div>
-                                      `;
-                                      modalDiv.classList.add("open");
-                                      document.body.classList.add("fixed");
-                                  };
-                              });
-                          });
-                      };
-                  });
-              });
+  specials.forEach((specialId) => {
+    allRecipes.forEach((recipe) => {
+      recipe.ingredients.forEach((ingredient) => {
+        if (specialId.ingredientId === ingredient.uuid) {
+
+          const letsCook = document.querySelectorAll("a.read-more");
+          letsCook.forEach((recipeButton) => {
+            recipeButton.addEventListener("click", (event) => {
+              event.preventDefault();
+              if (event.currentTarget.closest("div").querySelector(".rp-title").outerText === recipe.title) {
+                modalInnerDiv.innerHTML = `<h2 class="inner-modal-title">${recipe.title}</h2> <span class="close"> X </span>
+                      <img src=${recipe.images.full} alt="${recipe.title}">
+                      <p class="inner-description">${recipe.description}</p>
+                      <p>Prep Time: ${recipe.prepTime}</p>
+                      <p>Cook Time: ${recipe.cookTime}</p>
+                      <p>Servings: ${recipe.servings}</p>
+                      <ul>${recipe.ingredients.map((eachIngredient) => {return (`<li>${!eachIngredient.amount? "":eachIngredient.amount} ${eachIngredient.measurement} ${eachIngredient.name}</li>`)}).join(" ") }</ul>
+                      <hr>
+                      <ol>${recipe.directions.map((eachDirection) => {return ( `<li>${eachDirection.instructions}</li>`)}).join("") }</ol>
+                      <div class="coupon">
+                        <p>Special ${specialId.type} Deal: ${specialId.title}</p>
+                        <p>${specialId.text}</p>
+                      </div>
+                      `;
+                modalDiv.classList.add("open");
+                document.body.classList.add("fixed");
+              };
+            });
           });
-
-      }).catch((error) => {
-          console.error('An error has occured', error);
+        };
       });
+    });
+  });
+}
+
+const returnError = (error) => {
+  throw new Error(error);
+}
+
+const getAllRecipes = () => {
+  fetch('http://localhost:3001/recipes')
+    .then((getResponse))
+    .then(getRecipeData)
+
+    .then((getResponse))
+    .then((getSpecialsData))
+    .catch((returnError))
 }
 
 const closeModal = (event) => {
   const isOutSide = event.target.closest(".modal-inner");
   const x = event.target.tagName.toLowerCase() === 'span'
   if (!isOutSide || x) {
-      modalDiv.classList.remove("open");
-      document.body.classList.remove("fixed");
+    modalDiv.classList.remove("open");
+    document.body.classList.remove("fixed");
   }
 };
 
 window.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
-      modalDiv.classList.remove("open");
-      document.body.classList.remove("fixed");
+    modalDiv.classList.remove("open");
+    document.body.classList.remove("fixed");
   }
 });
 
-getAllRecipies();
+getAllRecipes();
 
 modalDiv.addEventListener("click", closeModal);
